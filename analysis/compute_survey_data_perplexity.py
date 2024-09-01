@@ -72,6 +72,12 @@ itr = model.task.get_batch_iterator(
 
 summed_nll = 0
 total_tokens = 0
+all_preds = {}  # full distribution over all possible tokens.
+all_nlls = {}  # the NLL for the target token.
+
+# keep track of data sizes to ensure completeness.
+num_individuals = 0
+num_observations = 0
 
 for eval_index, sample in enumerate(itr):
   print("Evaluating {}/{}...".format(eval_index, itr.total))
@@ -97,7 +103,22 @@ for eval_index, sample in enumerate(itr):
       ignore_index=model.model.decoder.padding_idx, reduction="none",)
     summed_nll += nll_loss.sum().item()
     total_tokens += target.ne(model.task.dictionary.pad_index).sum().item()
-    
+    # save the predicted distribution.
+    # you where using prev_output.shape[0] in your code, I used batch_size instead. They are the same.
+    prev_output = sample['net_input']['prev_output_tokens'].cpu().numpy()
+    assert prev_output.shape[0] == batch_size
+    probs = lprobs.exp()
+    num_individuals += batch_size
+    for batch_ind in range(batch_size):
+      labels = sample['target'][batch_ind].cpu().numpy()
+      mask = labels!= model.task.dictionary.pad_index  # only keep for non-padding labels.
+      all_preds[sample['id'][batch_ind].item()] = probs[batch_ind].cpu().numpy()[mask]
+      all_nlls[sample['id'][batch_ind].item()] = nll_loss[batch_ind].cpu().numpy()[mask]
+      num_observations += len(labels[labels != 1])
+
+print("..................")
+print(f"Number of individuals: {num_individuals:,} and {num_observations:,} observations.")
+
 overall_perplexity = np.exp(summed_nll / total_tokens)
 print("..................")
 print("Test-set results for {}, model loaded from '{}'".format(
@@ -106,3 +127,12 @@ print("..................")
 
 print("Overall perplexity: {:.2f}".format(overall_perplexity))
 print("..................")
+# Save all_preds in to nll_{dataset}_{seed}.npy
+# TODO: how to get several seeds?
+seed = 1
+output_path = "/oak/stanford/groups/athey/career_transformer_data/CAREERv1_results"
+np.save(f"{output_path}/probs_{args.dataset_name}_{seed}.npy", all_preds)
+np.save(f"{output_path}/nll_{args.dataset_name}_{seed}.npy", all_nlls)
+# np.save(f"predictions/dict.txt", model.task.target_dictionary.symbols)
+# all_preds is a dict, where each key is an integer, and the value is a numpy array of nlls.
+# np.load("nll_{}_{}.npy".format(dataset, seed), allow_pickle=True).item()
