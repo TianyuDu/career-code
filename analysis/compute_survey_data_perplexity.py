@@ -27,6 +27,13 @@ parser.add_argument("--model-name",
 parser.add_argument("--dataset-name", 
                     type=str,
                     help="Name of survey dataset (e.g. 'nlsy').")
+parser.add_argument("--seed",
+                    type=int,
+                    help="Inform the model with a specific seed for reproducibility.")
+parser.add_argument("--prediction_output",
+                    type=str,
+                    help="Path to save prediction output.")
+
 args = parser.parse_args()
 
 model_path = os.path.join(
@@ -116,6 +123,10 @@ for eval_index, sample in enumerate(itr):
       all_nlls[sample['id'][batch_ind].item()] = nll_loss[batch_ind].cpu().numpy()[mask]
       num_observations += len(labels[labels != 1])
 
+      # sanity check.
+
+
+
 print("..................")
 print(f"Number of individuals: {num_individuals:,} and {num_observations:,} observations.")
 
@@ -128,11 +139,13 @@ print("..................")
 print("Overall perplexity: {:.2f}".format(overall_perplexity))
 print("..................")
 # Save all_preds in to nll_{dataset}_{seed}.npy
-# TODO: how to get several seeds?
-seed = 1
+seed = args.seed if args.seed is not None else 0
 output_path = "/oak/stanford/groups/athey/career_transformer_data/CAREERv1_results"
+with open(f"{output_path}/dict_{args.dataset_name}.txt", "w") as f:
+    for item in model.task.target_dictionary.symbols:
+        f.write(f"{item}\n")
 np.save(f"{output_path}/probs_{args.dataset_name}_{seed}.npy", all_preds)
 np.save(f"{output_path}/nll_{args.dataset_name}_{seed}.npy", all_nlls)
-# np.save(f"predictions/dict.txt", model.task.target_dictionary.symbols)
+# np.save(f"predictions/dict.txt", )
 # all_preds is a dict, where each key is an integer, and the value is a numpy array of nlls.
 # np.load("nll_{}_{}.npy".format(dataset, seed), allow_pickle=True).item()
