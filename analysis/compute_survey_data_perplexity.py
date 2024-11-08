@@ -139,13 +139,22 @@ print("..................")
 print("Overall perplexity: {:.2f}".format(overall_perplexity))
 print("..................")
 # Save all_preds in to nll_{dataset}_{seed}.npy
+assert os.path.exists(args.prediction_output), f"Prediction output directory does not exist: {args.prediction_output}"
 seed = args.seed if args.seed is not None else 0
-output_path = "/oak/stanford/groups/athey/career_transformer_data/CAREERv1_results"
-with open(f"{output_path}/dict_{args.dataset_name}.txt", "w") as f:
+# write the dictionary of tokens.
+with open(os.path.join(args.prediction_output, f"dict_{args.dataset_name}.txt"), "w") as f:
     for item in model.task.target_dictionary.symbols:
         f.write(f"{item}\n")
-np.save(f"{output_path}/probs_{args.dataset_name}_{seed}.npy", all_preds)
-np.save(f"{output_path}/nll_{args.dataset_name}_{seed}.npy", all_nlls)
+np.save(os.path.join(args.prediction_output, f"probs_{args.dataset_name}_{seed}.npy"), all_preds)
+np.save(os.path.join(args.prediction_output, f"nll_{args.dataset_name}_{seed}.npy"), all_nlls)
 # np.save(f"predictions/dict.txt", )
 # all_preds is a dict, where each key is an integer, and the value is a numpy array of nlls.
 # np.load("nll_{}_{}.npy".format(dataset, seed), allow_pickle=True).item()
+
+# also save the model embedding of elements in model.task.target_dictionary.symbols.
+# Retrieve token embeddings for all tokens in the target dictionary
+token_indices = torch.arange(len(model.task.target_dictionary), device=model.device)
+# model.model.decoder.embed_tokens is an embedding layer: Embedding(472, 192, padding_idx=1)
+token_embeddings = model.model.decoder.embed_tokens(token_indices).cpu().detach().numpy()
+# Save the token embeddings as a .npy file
+np.save(os.path.join(args.prediction_output, f"embeddings_{args.dataset_name}_{seed}.npy"), token_embeddings)
