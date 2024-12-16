@@ -1,2 +1,10 @@
 .DS_Store
 notes.md
+# ignore data and logs, those are big files generated during the model training.
+archived*/
+checkpoints_*_seed_*/
+data_bin_*_seed_*/
+fairseq/fairseq/checkpoints_*/
+fairseq/fairseq/logs_*/
+fairseq/fairseq/data-bin-*/
+logs_*_seed_*/
