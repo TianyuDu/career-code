@@ -65,7 +65,7 @@ model_path = os.path.join(
 binary_data_path = os.path.join(args.binary_data_dir, args.dataset_name)
 
 # Load model.
-if args.model_name == 'career':
+if args.model_name == 'career' or 'career-no-pretraining':
   model = TransformerModel.from_pretrained(
     model_path,
     checkpoint_file="checkpoint_best.pt",
