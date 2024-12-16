@@ -4,6 +4,7 @@ BINARY_DATA_DIR=''
 SURVEY_DATASET_NAME=''
 FORECAST=false
 NUM_WORKERS=4
+SEED=123
 
 print_usage() {
   printf "Usage: ..."
@@ -68,7 +69,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.job \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/job \
     --dict-only \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Creating dictionary for years..."
@@ -79,7 +81,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.year \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/year \
     --dict-only \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Creating dictionary for educations..."
@@ -90,7 +93,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.education \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/education \
     --dict-only \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Creating dictionary for locations..."
@@ -101,7 +105,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.location \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/location \
     --dict-only \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 ## Modify year dictionary so years are ordered (this is helpful for
@@ -118,8 +123,9 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.job \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/job \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/job/dict.txt \
-    --workers ${NUM_WORKERS}
-echo "...done."
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
+echo "...done." 
 
 echo "Preprocessing resume data (years)..."
 fairseq-preprocess \
@@ -129,7 +135,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.year \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/year \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/year/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing resume data (educations)..."
@@ -140,7 +147,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.education \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/education \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/education/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing resume data (locations)..."
@@ -151,7 +159,8 @@ fairseq-preprocess \
     --testpref $RESUME_DATA_DIR/test.location \
     --destdir $BINARY_DATA_DIR/$RESUME_SUFFIX/location \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/location/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 ## Now repeat this preprocessing for the survey dataset
@@ -163,7 +172,8 @@ fairseq-preprocess \
     --testpref $SURVEY_DATA_DIR/test.job \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/job \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/job/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing survey data (years)..."
@@ -174,7 +184,8 @@ fairseq-preprocess \
     --testpref $SURVEY_DATA_DIR/test.year \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/year \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/year/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing survey data (educations)..."
@@ -185,7 +196,8 @@ fairseq-preprocess \
     --testpref $SURVEY_DATA_DIR/test.education \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/education \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/education/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing survey data (locations)..."
@@ -196,7 +208,8 @@ fairseq-preprocess \
     --testpref $SURVEY_DATA_DIR/test.location \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/location \
     --srcdict $BINARY_DATA_DIR/$RESUME_SUFFIX/location/dict.txt \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 ## The last two covariates -- race and ethnicity -- aren't used for the resume
@@ -208,7 +221,8 @@ fairseq-preprocess \
     --validpref $SURVEY_DATA_DIR/valid.ethnicity \
     --testpref $SURVEY_DATA_DIR/test.ethnicity \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/ethnicity \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 echo "Preprocessing survey data (genders)..."
@@ -218,7 +232,8 @@ fairseq-preprocess \
     --validpref $SURVEY_DATA_DIR/valid.gender \
     --testpref $SURVEY_DATA_DIR/test.gender \
     --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/gender \
-    --workers ${NUM_WORKERS}
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
 echo "...done."
 
 ## Finally, copy the dictionaries created for ethnicity and gender to the

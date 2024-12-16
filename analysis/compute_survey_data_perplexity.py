@@ -3,6 +3,7 @@ import argparse
 import os
 import pdb
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from fairseq import utils
 
@@ -11,6 +12,26 @@ from fairseq.models.bag_of_jobs import BagOfJobsModel
 from fairseq.models.lstm import LSTMModel
 from fairseq.models.regression import RegressionModel
 import numpy as np
+
+def count_parameters(model: nn.Module):
+    """
+    Computes the number of trainable and non-trainable parameters in a PyTorch model.
+
+    Args:
+        model (nn.Module): The PyTorch model to analyze.
+
+    Returns:
+        dict: A dictionary containing the count of trainable and non-trainable parameters.
+    """
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    non_trainable_params = sum(p.numel() for p in model.parameters() if not p.requires_grad)
+    
+    return {
+        "trainable_parameters": trainable_params,
+        "non_trainable_parameters": non_trainable_params,
+        "total_parameters": trainable_params + non_trainable_params
+    }
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--binary-data-dir", 
@@ -69,6 +90,8 @@ if torch.cuda.is_available():
 model.eval()
 model.model = model.models[0]
 two_stage = model.model.decoder.args.two_stage
+print("Number of parameters:")
+print(count_parameters(model))
 
 # Load test data.
 model.task.load_dataset('test')
@@ -136,13 +159,13 @@ print("Test-set results for {}, model loaded from '{}'".format(
   args.model_name, model_path))
 print("..................")
 
-print("Overall perplexity: {:.2f}".format(overall_perplexity))
+print("Overall perplexity: {:.6f}".format(overall_perplexity))
 print("..................")
 # Save all_preds in to nll_{dataset}_{seed}.npy
 assert os.path.exists(args.prediction_output), f"Prediction output directory does not exist: {args.prediction_output}"
 seed = args.seed if args.seed is not None else 0
 # write the dictionary of tokens.
-with open(os.path.join(args.prediction_output, f"dict_{args.dataset_name}.txt"), "w") as f:
+with open(os.path.join(args.prediction_output, f"dict_{args.dataset_name}_{seed}.txt"), "w") as f:
     for item in model.task.target_dictionary.symbols:
         f.write(f"{item}\n")
 np.save(os.path.join(args.prediction_output, f"probs_{args.dataset_name}_{seed}.npy"), all_preds)
