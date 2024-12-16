@@ -81,7 +81,7 @@ elif args.model_name == 'regression':
     checkpoint_file="checkpoint_best.pt",
     data_name_or_path=binary_data_path)
 else:
-  raise ValueError("Model name must be one of: 'career', 'bag-of-jobs',"
+  raise ValueError("Model name must be one of: 'career', 'career-no-pretraining', 'bag-of-jobs',"
                    " or 'regression'.")
 
 # Move model to GPU and set to eval mode.
