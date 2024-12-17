@@ -25,7 +25,7 @@ def count_parameters(model: nn.Module):
     """
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     non_trainable_params = sum(p.numel() for p in model.parameters() if not p.requires_grad)
-    
+
     return {
         "trainable_parameters": trainable_params,
         "non_trainable_parameters": non_trainable_params,
@@ -34,18 +34,18 @@ def count_parameters(model: nn.Module):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--binary-data-dir", 
+parser.add_argument("--binary-data-dir",
                     type=str,
                     help="Location of binarized data.")
-parser.add_argument("--save-dir", 
+parser.add_argument("--save-dir",
                     type=str,
                     help="Location of saved model checkpoints.")
-parser.add_argument("--model-name", 
+parser.add_argument("--model-name",
                     type=str,
                     default='career',
                     help="Model name (must be one of: 'career', 'bag-of-jobs',"
                          " or 'regression').")
-parser.add_argument("--dataset-name", 
+parser.add_argument("--dataset-name",
                     type=str,
                     help="Name of survey dataset (e.g. 'nlsy').")
 parser.add_argument("--seed",
@@ -58,9 +58,9 @@ parser.add_argument("--prediction_output",
 args = parser.parse_args()
 
 model_path = os.path.join(
-  args.save_dir, 
+  args.save_dir,
   '{}/{}{}'.format(
-    args.dataset_name, args.model_name, 
+    args.dataset_name, args.model_name,
     "-transferred" if args.model_name == 'career' else ''))
 binary_data_path = os.path.join(args.binary_data_dir, args.dataset_name)
 
@@ -114,14 +114,14 @@ for eval_index, sample in enumerate(itr):
   with torch.no_grad():
     if torch.cuda.is_available():
       sample = utils.move_to_cuda(sample)
-    
+
     # Compute log probs for the sample.
     sample['net_input']['prev_output_tokens'] = sample[
       'net_input']['src_tokens']
     del sample['net_input']['src_tokens']
     output = model.model.decoder(**sample['net_input'])
     lprobs = model.model.get_normalized_probs(
-      output, log_probs=True, two_stage=two_stage, 
+      output, log_probs=True, two_stage=two_stage,
       prev_tokens=sample['net_input']['prev_output_tokens'])
     batch_size, seq_len, _ = lprobs.size()
     target = sample['target'].to(model.device)
@@ -129,7 +129,7 @@ for eval_index, sample in enumerate(itr):
     target[target == model.task.dictionary.eos_index] = (
       model.task.dictionary.pad_index)
     nll_loss = F.nll_loss(
-      lprobs.transpose(2, 1), sample['target'].to(model.device), 
+      lprobs.transpose(2, 1), sample['target'].to(model.device),
       ignore_index=model.model.decoder.padding_idx, reduction="none",)
     summed_nll += nll_loss.sum().item()
     total_tokens += target.ne(model.task.dictionary.pad_index).sum().item()
