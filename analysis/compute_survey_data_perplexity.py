@@ -162,6 +162,11 @@ print("..................")
 print("Overall perplexity: {:.6f}".format(overall_perplexity))
 print("..................")
 # Save all_preds in to nll_{dataset}_{seed}.npy
+if args.model_name != "career":
+  args.prediction_output = os.path.join(args.prediction_output, args.model_name)
+  print(f"Saving predictions to {args.prediction_output}")
+  os.makedirs(args.prediction_output, exist_ok=True)
+
 assert os.path.exists(args.prediction_output), f"Prediction output directory does not exist: {args.prediction_output}"
 seed = args.seed if args.seed is not None else 0
 # write the dictionary of tokens.
