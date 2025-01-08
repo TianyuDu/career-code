@@ -164,8 +164,8 @@ print("..................")
 
 # create sub-directory in args.prediction_output 
 if args.model_name == "career":
-  args.prediction_output = os.path.join(args.prediction_output, "career-pretrained-finetuned")
-else:
+  args.prediction_output = os.path.join(args.prediction_output, "career-transferred")
+elif:
   args.prediction_output = os.path.join(args.prediction_output, args.model_name)
 print(f"Saving predictions to {args.prediction_output}")
 os.makedirs(args.prediction_output, exist_ok=True)
