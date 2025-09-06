@@ -116,6 +116,10 @@ class OccupationModelingConfig(FairseqDataclass):
         default=False,
         metadata={"help": "whether to include location covariate"},
     )
+    include_year_of_birth: Optional[bool] = field(
+        default=False,
+        metadata={"help": "whether to include year_of_birth covariate"},
+    )
 
     # TODO common vars below add to parent
     seed: int = II("common.seed")
@@ -161,7 +165,8 @@ class OccupationModelingTask(LegacyFairseqTask):
     """
 
     def __init__(self, args, dictionary, year_dictionary, education_dictionary,
-                 ethnicity_dictionary, gender_dictionary, location_dictionary, 
+                 ethnicity_dictionary, gender_dictionary, location_dictionary,
+                 year_of_birth_dictionary,
                  output_dictionary=None, targets=None):
         super().__init__(args)
         self.dictionary = dictionary
@@ -171,6 +176,7 @@ class OccupationModelingTask(LegacyFairseqTask):
         self._ethnicity_dictionary = ethnicity_dictionary
         self._gender_dictionary = gender_dictionary
         self._location_dictionary = location_dictionary
+        self._year_of_birth_dictionary = year_of_birth_dictionary
         self.output_dictionary = output_dictionary or dictionary
 
         if targets is None:
@@ -200,14 +206,16 @@ class OccupationModelingTask(LegacyFairseqTask):
             gender_dictionary = load_dictionary("gender")
             ethnicity_dictionary = load_dictionary("ethnicity")
             location_dictionary = load_dictionary("location")
+            year_of_birth_dictionary = load_dictionary("year_of_birth")
             logger.info("dictionary: {} types".format(len(dictionary)))
             output_dictionary = dictionary
             if args.output_dictionary_size >= 0:
                 output_dictionary = TruncatedDictionary(
                     dictionary, args.output_dictionary_size
                 )
-        return (dictionary, year_dictionary, education_dictionary, 
-                ethnicity_dictionary, gender_dictionary, location_dictionary, 
+        return (dictionary, year_dictionary, education_dictionary,
+                ethnicity_dictionary, gender_dictionary, location_dictionary,
+                year_of_birth_dictionary,
                 output_dictionary)
 
     @classmethod
@@ -217,8 +225,9 @@ class OccupationModelingTask(LegacyFairseqTask):
         Args:
             args (argparse.Namespace): parsed command-line arguments
         """
-        (dictionary, year_dictionary, education_dictionary, 
-         ethnicity_dictionary, gender_dictionary, location_dictionary, 
+        (dictionary, year_dictionary, education_dictionary,
+         ethnicity_dictionary, gender_dictionary, location_dictionary,
+         year_of_birth_dictionary,
          output_dictionary) = cls.setup_dictionary(args, **kwargs)
 
         # upgrade old checkpoints
@@ -236,8 +245,9 @@ class OccupationModelingTask(LegacyFairseqTask):
             # standard occupation modeling
             targets = ["future"]
 
-        return cls(args, dictionary, year_dictionary, education_dictionary, 
-                   ethnicity_dictionary, gender_dictionary, location_dictionary, 
+        return cls(args, dictionary, year_dictionary, education_dictionary,
+                   ethnicity_dictionary, gender_dictionary, location_dictionary,
+                   year_of_birth_dictionary,
                    output_dictionary, targets=targets)
 
     def build_model(self, args, from_checkpoint=False):
@@ -347,6 +357,7 @@ class OccupationModelingTask(LegacyFairseqTask):
         ethnicity_dataset = load_static_dataset("ethnicity")
         gender_dataset = load_static_dataset("gender")
         location_dataset = load_static_dataset("location")
+        year_of_birth_dataset = load_static_dataset("year_of_birth")
 
         add_eos_for_other_targets = (
             self.args.sample_break_mode is not None
@@ -369,6 +380,7 @@ class OccupationModelingTask(LegacyFairseqTask):
             ethnicity_dataset=ethnicity_dataset,
             gender_dataset=gender_dataset,
             location_dataset=location_dataset,
+            year_of_birth_dataset=year_of_birth_dataset,
             sizes=job_dataset.sizes,
             src_vocab=self.dictionary,
             tgt_vocab=self.output_dictionary,

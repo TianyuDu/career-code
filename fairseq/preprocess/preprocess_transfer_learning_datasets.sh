@@ -236,6 +236,17 @@ fairseq-preprocess \
     --seed ${SEED}
 echo "...done."
 
+echo "Preprocessing survey data (year_of_birth)..."
+fairseq-preprocess \
+    --only-source \
+    --trainpref $SURVEY_DATA_DIR/train.year_of_birth \
+    --validpref $SURVEY_DATA_DIR/valid.year_of_birth \
+    --testpref $SURVEY_DATA_DIR/test.year_of_birth \
+    --destdir $BINARY_DATA_DIR/$SURVEY_SUFFIX/year_of_birth \
+    --workers ${NUM_WORKERS} \
+    --seed ${SEED}
+echo "...done."
+
 ## Finally, copy the dictionaries created for ethnicity and gender to the
 ## resume pretraining directory, since, although the model does not pretrain
 ## on these variables, for software reasons, it needs to create the embedding
@@ -246,3 +257,6 @@ cp $BINARY_DATA_DIR/$SURVEY_SUFFIX/ethnicity/dict.txt \
    $BINARY_DATA_DIR/$RESUME_SUFFIX/ethnicity/dict.txt
 cp $BINARY_DATA_DIR/$SURVEY_SUFFIX/gender/dict.txt \
    $BINARY_DATA_DIR/$RESUME_SUFFIX/gender/dict.txt
+mkdir $BINARY_DATA_DIR/$RESUME_SUFFIX/year_of_birth
+cp $BINARY_DATA_DIR/$SURVEY_SUFFIX/year_of_birth/dict.txt \
+   $BINARY_DATA_DIR/$RESUME_SUFFIX/year_of_birth/dict.txt

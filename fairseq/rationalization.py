@@ -34,6 +34,7 @@ def rationalize_occupation_model(model,
                                  ethnicities=None,
                                  genders=None,
                                  locations=None,
+                                 year_of_births=None,
                                  verbose=False,
                                  max_steps=1024,
                                  start_step=0,
@@ -83,6 +84,7 @@ def rationalize_occupation_model(model,
           ethnicities=ethnicities[None],
           genders=genders[None],
           locations=locations[None],
+          year_of_births=year_of_births[None] if year_of_births is not None else None,
           position_ids=all_positions[:, prev_token:(prev_token + 1)])
         best_probs = model.model.get_normalized_probs(
           decoder_out, log_probs=True, 
@@ -105,6 +107,8 @@ def rationalize_occupation_model(model,
         candidate_ethnicities = ethnicities[None].repeat([len(candidates), 1])
         candidate_genders = genders[None].repeat([len(candidates), 1])
         candidate_locations = locations[None].repeat([len(candidates), 1])
+        if year_of_births is not None:
+          candidate_year_of_births = year_of_births[None].repeat([len(candidates), 1])
         candidate_position_ids = all_positions[0, candidates]
 
         # Divide the candidates into batches, since all possible subsets may
@@ -124,6 +128,8 @@ def rationalize_occupation_model(model,
             batch_start_ind:batch_end_ind]
           batch_genders = candidate_genders[batch_start_ind:batch_end_ind]
           batch_locations = candidate_locations[batch_start_ind:batch_end_ind]
+          batch_year_of_births = (candidate_year_of_births[batch_start_ind:batch_end_ind]
+            if year_of_births is not None else None)
           batch_position_ids = candidate_position_ids[
             batch_start_ind:batch_end_ind]
           batch_decoder_out = model.model.decoder(
@@ -133,6 +139,7 @@ def rationalize_occupation_model(model,
             ethnicities=batch_ethnicities,
             genders=batch_genders,
             locations=batch_locations,
+            year_of_births=batch_year_of_births,
             position_ids=batch_position_ids)
           batch_probs = model.model.get_normalized_probs(
             batch_decoder_out, log_probs=True,

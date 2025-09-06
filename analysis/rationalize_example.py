@@ -63,8 +63,11 @@ for eval_index, sample in enumerate(itr):
     input_ethnicities = sample['net_input']['ethnicities'][0]
     input_genders = sample['net_input']['genders'][0]
     input_locations = sample['net_input']['locations'][0]
+    input_year_of_births = None
+    if 'year_of_births' in sample['net_input'] and sample['net_input']['year_of_births'] is not None:
+      input_year_of_births = sample['net_input']['year_of_births'][0]
     rationale_log = rationalize_occupation_model(
       model, input_jobs, years=input_years, educations=input_educations,
       ethnicities=input_ethnicities, genders=input_genders, 
-      locations=input_locations, verbose=True)
+      locations=input_locations, year_of_births=input_year_of_births, verbose=True)
     break

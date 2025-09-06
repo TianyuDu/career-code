@@ -239,6 +239,10 @@ class TransformerLanguageModelConfig(FairseqDataclass):
         default=False,
         metadata={"help": "Whether to include location covariate."},
     )
+    include_year_of_birth: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether to include year_of_birth covariate."},
+    )
     word_dropout_mixture: Optional[float] = field(
         default=0.0, 
         metadata={"help": "Proportion of the time to use word dropout "
@@ -339,6 +343,8 @@ class TransformerLanguageModel(FairseqLanguageModel):
             args, task._gender_dictionary, args.decoder_input_dim)
         embed_location = cls.build_embedding(
             args, task._location_dictionary, args.decoder_input_dim)
+        embed_year_of_birth = cls.build_embedding(
+            args, task._year_of_birth_dictionary, args.decoder_input_dim)
 
         if args.tie_adaptive_weights:
             assert args.adaptive_input
@@ -351,9 +357,10 @@ class TransformerLanguageModel(FairseqLanguageModel):
             assert args.decoder_input_dim == args.decoder_output_dim
 
         decoder = TransformerDecoder(
-            args, task.target_dictionary, embed_tokens, embed_year=embed_year, 
-            embed_education=embed_education, embed_ethnicity=embed_ethnicity, 
-            embed_gender=embed_gender, embed_location=embed_location, 
+            args, task.target_dictionary, embed_tokens, embed_year=embed_year,
+            embed_education=embed_education, embed_ethnicity=embed_ethnicity,
+            embed_gender=embed_gender, embed_location=embed_location,
+            embed_year_of_birth=embed_year_of_birth,
             no_encoder_attn=True
         )
         return cls(decoder)
