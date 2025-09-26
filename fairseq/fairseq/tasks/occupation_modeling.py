@@ -118,7 +118,10 @@ class OccupationModelingConfig(FairseqDataclass):
     )
     include_year_of_birth: Optional[bool] = field(
         default=False,
-        metadata={"help": "whether to include year_of_birth covariate"},
+        metadata={
+            "help": "whether to include year_of_birth covariate",
+            "argparse_alias": "--include-birth-year",
+        },
     )
 
     # TODO common vars below add to parent
@@ -269,6 +272,7 @@ class OccupationModelingTask(LegacyFairseqTask):
             split (str): name of the split (e.g., train, valid, valid1, test)
         """
         def load_time_varying_dataset(name):
+            include_flag = f"--include-{name.replace('_', '-')}"
             if name == 'job' or getattr(self.args, "include_{}".format(name)):
                 paths = utils.split_paths(os.path.join(self.args.data, name))
                 assert len(paths) > 0
@@ -287,10 +291,16 @@ class OccupationModelingTask(LegacyFairseqTask):
                             "No job dataset found at {}/{}".format(split, data_path))
                     elif getattr(self.args, "include_{}".format(name)):
                         raise FileNotFoundError(
-                            "Using '--include-{}' flag but no binary data found in "
-                            "{}. You can either remove the '--include-{}' flag to "
-                            "not use this covariate or preprocess {} data in {}".format(
-                              name, data_path, name, name, data_path))
+                            "Using '{}' flag but no binary data found in {}. "
+                            "You can either remove the '{}' flag to not use this "
+                            "covariate or preprocess {} data in {}".format(
+                                include_flag,
+                                data_path,
+                                include_flag,
+                                name,
+                                data_path,
+                            )
+                        )
 
                 dataset = maybe_shorten_dataset(
                     dataset,
@@ -317,6 +327,7 @@ class OccupationModelingTask(LegacyFairseqTask):
                 return None
         
         def load_static_dataset(name):
+            include_flag = f"--include-{name.replace('_', '-')}"
             if getattr(self.args, "include_{}".format(name)):
                 paths = utils.split_paths(os.path.join(self.args.data, name))
                 data_path = paths[(epoch - 1) % len(paths)]
@@ -327,10 +338,17 @@ class OccupationModelingTask(LegacyFairseqTask):
                 )
                 if dataset is None:
                     raise FileNotFoundError(
-                        "Using '--include-{}' flag but no binary data found in "
-                        "{}{}. You can either remove the '--include-{}' flag to "
-                        "not use this covariate or preprocess {} data in {}".format(
-                          name, split, data_path, name, name, data_path))
+                        "Using '{}' flag but no binary data found in {}{}. "
+                        "You can either remove the '{}' flag to not use this "
+                        "covariate or preprocess {} data in {}".format(
+                            include_flag,
+                            split,
+                            data_path,
+                            include_flag,
+                            name,
+                            data_path,
+                        )
+                    )
 
                 dataset = maybe_shorten_dataset(
                     dataset,
