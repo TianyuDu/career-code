@@ -118,7 +118,7 @@ The number of updates that you need to run will depend on the size of your resum
 ```{bash}
 tensorboard --logdir $LOG_DIR/resume-pretraining
 ```
-If you'd like to train without covariates, you can remove the flags `--include-year` or `--include-education` or `--include-location` or `--include-birth-year`.
+If you'd like to train without covariates, you can remove the flags `--include-year` or `--include-education` or `--include-location` or `--include-year-of-birth`.
 
 ### Fine-tune CAREER on a survey dataset
 After you've pretrained CAREER on resumes, you can now fine-tune on the survey dataset by running the following command (again from the `fairseq` directory):
@@ -138,7 +138,7 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/$SURVEY_DATASET_NAME/career-transferred \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender --include-birth-year \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --no-epoch-checkpoints
 ```
 Again, the number of steps to train for depends on the size of the dataset. Since a survey dataset is typically much smaller than a resume dataset, fine-tuning should be much faster than pretraining (fine-tuning on NLSY takes us less than 13 minutes on a single GPU). You can fine-tune even after the model begins to overfit; fairseq will always save the model with the best validation loss. Notice that here we've included covariates that weren't available for the resumes dataset (ethnicity and gender).
@@ -173,7 +173,7 @@ fairseq-train --task occupation_modeling \
   --fp16 --two-stage \
   --no-epoch-checkpoints \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender --include-birth-year \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --embed-dim 1024
 ```
 To fit the regression model, run the following command (also from the `fairseq` directory):
@@ -197,7 +197,7 @@ fairseq-train --task occupation_modeling \
   --include-total-years --include-year \
   --non-consecutive-year-effect --include-education \
   --education-difference --include-ethnicity \
-  --include-gender --include-location --include-birth-year
+  --include-gender --include-location --include-year-of-birth
 ```
 To evaluate these models, you can run the same script as for evaluating CAREER, replacing `--model-name career` with `bag-of-jobs` or `regression`, e.g.
 ```{bash}
@@ -258,7 +258,7 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/forecast-$SURVEY_DATASET_NAME/career-transferred \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender --include-birth-year \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --no-epoch-checkpoints
 ```
 
@@ -291,7 +291,7 @@ fairseq-train --task occupation_modeling \
   --fp16 --two-stage \
   --no-epoch-checkpoints \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender --include-birth-year \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --embed-dim 1024
 ```
 For regression:
@@ -315,7 +315,7 @@ fairseq-train --task occupation_modeling \
   --include-total-years --include-year \
   --non-consecutive-year-effect --include-education \
   --education-difference --include-ethnicity \
-  --include-gender --include-location --include-birth-year
+  --include-gender --include-location --include-year-of-birth
 ```
 
 ## Rationalize CAREER's predictions
@@ -336,7 +336,7 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/$SURVEY_DATASET_NAME/career-transferred-word-dropout \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender --include-birth-year \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --no-epoch-checkpoints \
   --word-dropout-mixture 0.5
 ```

@@ -154,14 +154,26 @@ for eval_index, sample in enumerate(itr):
           [num_samples, 1])
         locations = sample['net_input']['locations'][batch_ind].repeat(
           [num_samples, 1])
+        # Optional static covariate: year_of_birth
+        if 'year_of_births' in sample['net_input'] and sample['net_input']['year_of_births'] is not None:
+          year_of_births = sample['net_input']['year_of_births'][batch_ind].repeat(
+            [num_samples, 1])
+        else:
+          year_of_births = None
         # Simulate each year, one-by-one.
         num_unseen_years = sum(all_years >= cutoff_year)
         for simulated_year in range(first_simulated_index, 
                                     first_simulated_index + num_unseen_years):
           true_job = sample['target'][batch_ind][simulated_year].item()
           output = model.model.decoder.forward(
-            prev_tokens, years=years, educations=educations, genders=genders, 
-            ethnicities=ethnicities, locations=locations)
+            prev_tokens,
+            years=years,
+            educations=educations,
+            genders=genders,
+            ethnicities=ethnicities,
+            locations=locations,
+            year_of_births=year_of_births,
+          )
           probs = model.model.get_normalized_probs(
             output, log_probs=False, two_stage=True, 
             prev_tokens=prev_tokens)[:, -1]

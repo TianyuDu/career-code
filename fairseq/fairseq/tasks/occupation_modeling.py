@@ -120,7 +120,6 @@ class OccupationModelingConfig(FairseqDataclass):
         default=False,
         metadata={
             "help": "whether to include year_of_birth covariate",
-            "argparse_alias": "--include-birth-year",
         },
     )
 
