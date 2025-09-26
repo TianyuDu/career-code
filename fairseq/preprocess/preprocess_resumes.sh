@@ -19,7 +19,7 @@ fairseq-preprocess \
   --destdir $BINARY_DATA_DIR/resumes/job \
   --workers 60
 echo "...done."
- 
+
 echo "Preprocessing years..."
 fairseq-preprocess \
     --only-source \
@@ -50,12 +50,3 @@ fairseq-preprocess \
     --workers 60
 echo "...done."
 
-echo "Preprocessing year_of_birth..."
-fairseq-preprocess \
-    --only-source \
-    --trainpref $RESUME_DATA_DIR/train.year_of_birth \
-    --validpref $RESUME_DATA_DIR/valid.year_of_birth \
-    --testpref $RESUME_DATA_DIR/test.year_of_birth \
-    --destdir $BINARY_DATA_DIR/resumes/year_of_birth \
-    --workers 60
-echo "...done."
