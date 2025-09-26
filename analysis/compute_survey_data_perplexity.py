@@ -65,7 +65,7 @@ model_path = os.path.join(
 binary_data_path = os.path.join(args.binary_data_dir, args.dataset_name)
 
 # Load model.
-if args.model_name == 'career' or 'career-no-pretraining':
+if args.model_name in ('career', 'career-no-pretraining'):
   model = TransformerModel.from_pretrained(
     model_path,
     checkpoint_file="checkpoint_best.pt",
@@ -162,7 +162,7 @@ print("..................")
 print("Overall perplexity: {:.6f}".format(overall_perplexity))
 print("..................")
 
-# create sub-directory in args.prediction_output 
+# create sub-directory in args.prediction_output
 if args.model_name == "career":
   args.prediction_output = os.path.join(args.prediction_output, "career-transferred")
 else:

@@ -207,6 +207,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
         ethnicities: Optional[torch.tensor] = None,
         genders: Optional[torch.tensor] = None,
         locations: Optional[torch.tensor] = None,
+        year_of_births: Optional[torch.tensor] = None,
         position_ids: Optional[Tensor] = None,
     ):
         """
@@ -240,6 +241,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
             ethnicities=ethnicities,
             genders=genders,
             locations=locations,
+            year_of_births=year_of_births,
             position_ids=position_ids,
         )
 
@@ -262,6 +264,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
         ethnicities: Optional[torch.tensor] = None,
         genders: Optional[torch.tensor] = None,
         locations: Optional[torch.tensor] = None,
+        year_of_births: Optional[torch.tensor] = None,
         position_ids: Optional[torch.tensor] = None,
     ):
         return self.extract_features_scriptable(
@@ -276,6 +279,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
             ethnicities,
             genders,
             locations,
+            year_of_births,
             position_ids,
         )
 
@@ -298,6 +302,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
         ethnicities: Optional[torch.tensor] = None,
         genders: Optional[torch.tensor] = None,
         locations: Optional[torch.tensor] = None,
+        year_of_births: Optional[torch.tensor] = None,
         position_ids: Optional[torch.tensor] = None,
     ):
         """
@@ -357,21 +362,24 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
 
         if positions is not None:
             x += positions
-         
+
         if self.args.include_year:
           x += self.embed_year(years)
-        
+
         if self.args.include_education:
           x += self.embed_education(educations)
 
         if self.args.include_ethnicity:
           x += self.embed_ethnicity(ethnicities)
-        
+
         if self.args.include_gender:
           x += self.embed_gender(genders)
-        
+
         if self.args.include_location:
           x += self.embed_location(locations)
+
+        if self.args.include_year_of_birth:
+          x += self.embed_year_of_birth(year_of_births)
 
         if self.layernorm_embedding is not None:
             x = self.layernorm_embedding(x)
@@ -387,15 +395,15 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
 
         # With probability `word_dropout_mixture`, perform word dropout.
         # Otherwise, keep the batch the same.
-        if (self.training and 
-            self.word_dropout_mixture > 0 and 
+        if (self.training and
+            self.word_dropout_mixture > 0 and
             torch.rand(1) < self.word_dropout_mixture):
             _, tgt_len = prev_output_tokens.size()
-            # self_attn_word_dropout_mask.shape = (bsz, tgt_len, tgt_len), 
+            # self_attn_word_dropout_mask.shape = (bsz, tgt_len, tgt_len),
             # where each dropped out token will be -1e4 and each kept token
             #  will be 1.
             self_attn_word_dropout_mask = torch.eye(tgt_len).to(x)
-            # Sample input sequences uniformly at random from all possible 
+            # Sample input sequences uniformly at random from all possible
             # lengths.
             candidates = torch.randperm(tgt_len)
             num_tokens_to_keep = torch.randint(
@@ -545,6 +553,7 @@ class TransformerDecoder(TransformerDecoderBase):
         embed_ethnicity=None,
         embed_gender=None,
         embed_location=None,
+        embed_year_of_birth=None,
         no_encoder_attn=False,
         output_projection=None,
     ):
@@ -562,6 +571,7 @@ class TransformerDecoder(TransformerDecoderBase):
         self.embed_ethnicity = embed_ethnicity
         self.embed_gender = embed_gender
         self.embed_location = embed_location
+        self.embed_year_of_birth = embed_year_of_birth
 
     def build_output_projection(self, args, dictionary, embed_tokens):
         super().build_output_projection(

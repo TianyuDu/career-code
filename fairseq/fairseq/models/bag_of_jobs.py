@@ -37,6 +37,9 @@ class BagOfJobsModelConfig(FairseqDataclass):
   include_location: Optional[bool] = field(
     default=False, metadata={"help": "if True, include location covariate"}
   )
+  include_year_of_birth: Optional[bool] = field(
+    default=False, metadata={"help": "if True, include year_of_birth covariate"}
+  )
 
 
 @register_model("bag_of_jobs", dataclass=BagOfJobsModelConfig)
@@ -72,11 +75,14 @@ class BagOfJobsModel(FairseqLanguageModel):
     embed_location = cls.build_embedding(
       args, task._location_dictionary, args.embed_dim
     ) if args.include_location else None
+    embed_year_of_birth = cls.build_embedding(
+      args, task._year_of_birth_dictionary, args.embed_dim
+    ) if args.include_year_of_birth else None
     decoder = BagOfJobsDecoder(
       args, task.target_dictionary, embed_current_job, embed_context,
       embed_current_year, embed_context_year,
       embed_current_education, embed_context_education,
-      embed_ethnicity, embed_gender, embed_location)
+      embed_ethnicity, embed_gender, embed_location, embed_year_of_birth)
     return cls(decoder)
   
   @classmethod
@@ -89,7 +95,7 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
   def __init__(self, args, dictionary, embed_current_job, embed_context,
                embed_current_year, embed_context_year,
                embed_current_education, embed_context_education,
-               embed_ethnicity, embed_gender, embed_location):
+               embed_ethnicity, embed_gender, embed_location, embed_year_of_birth):
     self.args = args
     super().__init__(dictionary)
     self.embed_dim = args.embed_dim
@@ -99,6 +105,7 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
     self.include_ethnicity = args.include_ethnicity
     self.include_gender = args.include_gender
     self.include_location = args.include_location
+    self.include_year_of_birth = args.include_year_of_birth
     
     self.embed_current_job = embed_current_job
     self.embed_context = embed_context
@@ -109,6 +116,7 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
     self.embed_ethnicity = embed_ethnicity
     self.embed_gender = embed_gender
     self.embed_location = embed_location
+    self.embed_year_of_birth = embed_year_of_birth
 
     self.padding_idx = embed_context.padding_idx
 
@@ -142,6 +150,9 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
     self.location_output_projection = torch.nn.Linear(
       self.embed_dim, output_classes, bias=False
     )
+    self.year_of_birth_output_projection = torch.nn.Linear(
+      self.embed_dim, output_classes, bias=False
+    )
   
   def forward(self, 
               prev_output_tokens,
@@ -152,6 +163,7 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
               ethnicities: Optional[torch.tensor] = None,
               genders: Optional[torch.tensor] = None,
               locations: Optional[torch.tensor] = None,
+              year_of_births: Optional[torch.tensor] = None,
               **unused):
     """
     Args:
@@ -221,6 +233,11 @@ class BagOfJobsDecoder(FairseqIncrementalDecoder):
       location_embeds = self.embed_location(locations)
       location_logits = self.location_output_projection(location_embeds)
       logits += location_logits
+
+    if self.include_year_of_birth:
+      yob_embeds = self.embed_year_of_birth(year_of_births)
+      yob_logits = self.year_of_birth_output_projection(yob_embeds)
+      logits += yob_logits
 
     # Clamp for numerical stability.
     logits = torch.clamp(logits, min=-10, max=10)

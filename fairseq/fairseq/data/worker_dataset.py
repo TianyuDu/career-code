@@ -34,6 +34,7 @@ def collate(samples, pad_idx, eos_idx, fixed_pad_length=None, pad_to_bsz=None):
     ethnicities = merge("ethnicity")
     genders = merge("gender")
     locations = merge("location")
+    year_of_births = merge("year_of_birth")
     if samples[0]["target"] is not None:
         is_target_list = isinstance(samples[0]["target"], list)
         target = merge("target", is_target_list)
@@ -52,6 +53,7 @@ def collate(samples, pad_idx, eos_idx, fixed_pad_length=None, pad_to_bsz=None):
             "ethnicities": ethnicities,
             "genders": genders,
             "locations": locations,
+            "year_of_births": year_of_births,
         },
         "target": target,
     }
@@ -77,6 +79,7 @@ class WorkerDataset(FairseqDataset):
         ethnicity_dataset,
         gender_dataset,
         location_dataset,
+        year_of_birth_dataset,
         sizes,
         src_vocab,
         tgt_vocab=None,
@@ -95,6 +98,7 @@ class WorkerDataset(FairseqDataset):
         self.ethnicity_dataset = ethnicity_dataset
         self.gender_dataset = gender_dataset
         self.location_dataset = location_dataset
+        self.year_of_birth_dataset = year_of_birth_dataset
         self.sizes = np.array(sizes)
         self.vocab = src_vocab
         self.tgt_vocab = tgt_vocab or src_vocab
@@ -131,6 +135,7 @@ class WorkerDataset(FairseqDataset):
             ethnicity = self.ethnicity_dataset[index] if self.ethnicity_dataset is not None else None
             gender = self.gender_dataset[index] if self.gender_dataset is not None else None
             location = self.location_dataset[index] if self.location_dataset is not None else None
+            year_of_birth = self.year_of_birth_dataset[index] if self.year_of_birth_dataset is not None else None
             source, target = self._make_source_target(
                 source, future_target, past_target
             )
@@ -139,7 +144,8 @@ class WorkerDataset(FairseqDataset):
         source, target = self._maybe_add_bos(source, target)
         return {"id": index, "source": source, "target": target, "year": year,
                 "education": education, "ethnicity": ethnicity,
-                "gender": gender, "location": location,}
+                "gender": gender, "location": location,
+                "year_of_birth": year_of_birth,}
 
     def __len__(self):
         return len(self.dataset)

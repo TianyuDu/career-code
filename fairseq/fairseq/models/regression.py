@@ -61,6 +61,10 @@ class RegressionModelConfig(FairseqDataclass):
     default=False, 
     metadata={"help": "whether to include location"}
   )
+  include_year_of_birth: bool = field(
+    default=False,
+    metadata={"help": "whether to include year_of_birth"}
+  )
   two_stage: Optional[bool] = field(
     default=False, 
     metadata={"help": "if True, use two-stage training"}
@@ -103,13 +107,16 @@ class RegressionModel(FairseqLanguageModel):
     embed_location = (cls.build_embedding(
       args, task._location_dictionary, embed_dim) if args.include_location 
       else None)
+    embed_year_of_birth = (cls.build_embedding(
+      args, task._year_of_birth_dictionary, embed_dim) if args.include_year_of_birth 
+      else None)
 
     decoder = RegressionDecoder(
       args, task.target_dictionary, task._year_dictionary, embed_bias,
       embed_current_job, embed_previous_job, embed_years_in_current_job, 
       embed_total_years, embed_year, embed_non_consecutive_year_effect, 
       embed_education, embed_education_difference, embed_ethnicity, 
-      embed_gender, embed_location)
+      embed_gender, embed_location, embed_year_of_birth)
     return cls(decoder)
   
   @classmethod
@@ -124,7 +131,7 @@ class RegressionDecoder(FairseqIncrementalDecoder):
                embed_years_in_current_job, embed_total_years, embed_year, 
                embed_non_consecutive_year_effect, embed_education, 
                embed_education_difference, embed_ethnicity, embed_gender, 
-               embed_location):
+               embed_location, embed_year_of_birth):
     self.args = args
     super().__init__(dictionary)
     self.year_dictionary = year_dictionary
@@ -141,6 +148,7 @@ class RegressionDecoder(FairseqIncrementalDecoder):
     self.embed_ethnicity = embed_ethnicity
     self.embed_gender = embed_gender
     self.embed_location = embed_location
+    self.embed_year_of_birth = embed_year_of_birth
     self.two_stage = args.two_stage
 
     self.padding_idx = embed_current_job.padding_idx
@@ -155,6 +163,7 @@ class RegressionDecoder(FairseqIncrementalDecoder):
     self.include_ethnicity = self.args.include_ethnicity
     self.include_gender = self.args.include_gender
     self.include_location = self.args.include_location
+    self.include_year_of_birth = self.args.include_year_of_birth
 
   def forward(self, 
               prev_output_tokens,
@@ -165,6 +174,7 @@ class RegressionDecoder(FairseqIncrementalDecoder):
               ethnicities: Optional[torch.tensor] = None,
               genders: Optional[torch.tensor] = None,
               locations: Optional[torch.tensor] = None,
+              year_of_births: Optional[torch.tensor] = None,
               **unused):
     """
     Args:
@@ -231,6 +241,9 @@ class RegressionDecoder(FairseqIncrementalDecoder):
     if self.include_location:
       location_effects = self.embed_location(locations)
       logits += location_effects
+    if self.include_year_of_birth:
+      yob_effects = self.embed_year_of_birth(year_of_births)
+      logits += yob_effects
     # Clamp for numerical stability.
     logits = torch.clamp(logits, -10, 10)
     return logits, {}

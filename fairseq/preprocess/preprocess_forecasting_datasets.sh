@@ -51,6 +51,7 @@ cat $SURVEY_DATA_DIR/train.education $SURVEY_DATA_DIR/valid.education $SURVEY_DA
 cat $SURVEY_DATA_DIR/train.ethnicity $SURVEY_DATA_DIR/valid.ethnicity $SURVEY_DATA_DIR/test.ethnicity > $SURVEY_DATA_DIR/forecast_$SURVEY_DATASET_NAME/test.ethnicity
 cat $SURVEY_DATA_DIR/train.gender $SURVEY_DATA_DIR/valid.gender $SURVEY_DATA_DIR/test.gender > $SURVEY_DATA_DIR/forecast_$SURVEY_DATASET_NAME/test.gender
 cat $SURVEY_DATA_DIR/train.location $SURVEY_DATA_DIR/valid.location $SURVEY_DATA_DIR/test.location > $SURVEY_DATA_DIR/forecast_$SURVEY_DATASET_NAME/test.location
+cat $SURVEY_DATA_DIR/train.year_of_birth $SURVEY_DATA_DIR/valid.year_of_birth $SURVEY_DATA_DIR/test.year_of_birth > $SURVEY_DATA_DIR/forecast_$SURVEY_DATASET_NAME/test.year_of_birth
 
 echo "Binarizing data..."
 sh preprocess/preprocess_transfer_learning_datasets.sh \

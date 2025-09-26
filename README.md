@@ -19,7 +19,7 @@ Inside the virtual environment, use `pip` to install the required packages:
 ```{bash}
 pip install -r requirements.txt
 ```
-This code assumes that you have access to a GPU. Running the code without a GPU may be impractically slow. We use the neural sequence library [fairseq](https://github.com/pytorch/fairseq) to model job sequences. First, 
+This code assumes that you have access to a GPU. Running the code without a GPU may be impractically slow. We use the neural sequence library [fairseq](https://github.com/pytorch/fairseq) to model job sequences. First,
 configure fairseq to be developed locally:
 ```{bash}
 cd fairseq
@@ -42,9 +42,9 @@ cd ../..
 The instructions below will first pretrain CAREER's representations on a resume dataset and then fine-tune these representations on a small survey dataset. This code assumes that you have access to resume data and to a survey dataset such as [NLSY](https://www.bls.gov/nls/nlsy97.htm) or [PSID](https://psidonline.isr.umich.edu).
 
 ### <a id="data_formatting">Data formatting</a>
-CAREER is trained on sequences of jobs and covariates to predict future jobs. CAREER uses two kinds of datasets: large, noisy resume datasets, which CAREER will use to learn an initial set of representations, and small, survey datasets upon which CAREER will fine-tune its job representations. Each kind of dataset should have training, validation, and test sequences of jobs and covariates. CAREER will train on all of the sequences in the training split; it will use the validation split for model selection; and it will be evaluated by its performance on the test split. 
+CAREER is trained on sequences of jobs and covariates to predict future jobs. CAREER uses two kinds of datasets: large, noisy resume datasets, which CAREER will use to learn an initial set of representations, and small, survey datasets upon which CAREER will fine-tune its job representations. Each kind of dataset should have training, validation, and test sequences of jobs and covariates. CAREER will train on all of the sequences in the training split; it will use the validation split for model selection; and it will be evaluated by its performance on the test split.
 
-Each split must have a sequence of jobs, and may contain as many of the supported covariates as desired: year, education, race/ethnicity, gender, and location. For example, the train split must contain the data file `train.job`, and it may contain as many of the following data files as desired: `train.year`, `train.education`, `train.ethnicity`, `train.gender`, and `train.location`. The same goes with the validation and test splits, replacing `train` with `valid` and `test`, respectively (e.g. resulting in the files `valid.job` and `test.job`). All splits must contain sequences of jobs; if a split contains other covariates as well, each covariate must be contained in all of the splits. Each file should end with a newline.
+Each split must have a sequence of jobs, and may contain as many of the supported covariates as desired: year, education, race/ethnicity, gender, location, and year_of_birth (optional). For example, the train split must contain the data file `train.job`, and it may contain as many of the following data files as desired: `train.year`, `train.education`, `train.ethnicity`, `train.gender`, `train.location`, and `train.year_of_birth`. The same goes with the validation and test splits, replacing `train` with `valid` and `test`, respectively (e.g. resulting in the files `valid.job` and `test.job`). All splits must contain sequences of jobs; if a split contains other covariates as well, each covariate must be contained in all of the splits. Each file should end with a newline.
 
 An example of data files in the correct format is [located here](https://github.com/keyonvafa/career-code/tree/main/sample-data) (these data files are for demonstration purposes only; they do not correspond to real sequences and they are too short for learning useful representations). Each row in a data file corresponds to one individual. In the job file, e.g. `train.job`, each row is a sequence of jobs. Jobs should be denoted with a classification code, such as [O*NET SOC](https://www.onetcenter.org/taxonomy/2019/list.html) or [occ1990dd](https://www.ddorn.net/data.htm). The exact coding scheme does not matter, as long as the coding is consistent. Use spaces to separate job timesteps; e.g., a sequence of two jobs should contain a job code, a space, and a job code. For example, the snippet below contains two sequences of jobs in the [O*NET SOC](https://www.onetcenter.org/taxonomy/2019/list.html) format: the first individual has recorded jobs for 8 timesteps, and the second individual has recorded jobs for 5 timesteps.
 
@@ -57,21 +57,26 @@ Each covariate file should contain the same number of lines as the job file, sin
 2001 2002 2003 2004 2005 2006 2007 2008
 2005 2006 2007 2008 2009
 ```
-We consider education as another time-varying covariate, where each entry corresponds to the most recent educational degree. We consider the other covariates to be static. For static covariates, there should be one entry per line. For example, if the first individual in our ongoing example is female and the second individual is male, the gender file should look like:
+We consider education as another time-varying covariate, where each entry corresponds to the most recent educational degree. We consider the other covariates to be static (gender, race/ethnicity, location, and year_of_birth). For static covariates, there should be one entry per line. For example, if the first individual in our ongoing example is female and the second individual is male, the gender file should look like:
 ```
 female
 male
+```
+Similarly, for year_of_birth (a static covariate), there should be one entry per line:
+```
+1987
+1992
 ```
 [Refer here](https://github.com/keyonvafa/career-code/tree/main/sample-data) for an example of each data file.
 
 ### <a id="data_location">Data location</a>
 
-For our experiments, we use all covariates except for race/ethnicity and gender for the resume data, and we use all covariates for the survey datasets. The data should be stored in `$RESUME_DATA_DIR` and `$SURVEY_DATA_DIR`. More specifically, replace the ellipses below with the location of the resume and survey datasets: 
+For our experiments, the resume (pre-training) data uses year, education, and location only (no year_of_birth, ethnicity, or gender). The survey datasets use all covariates, including year_of_birth, ethnicity, and gender. The data should be stored in `$RESUME_DATA_DIR` and `$SURVEY_DATA_DIR`. More specifically, replace the ellipses below with the location of the resume and survey datasets:
 ```{bash}
 RESUME_DATA_DIR=...
 SURVEY_DATA_DIR=...
 ```
-In our case, `$RESUME_DATA_DIR` should direct to a folder contain 12 files: `train.job`, `train.year`, `train.education`, `train.location`, and the same four file names but replacing `train` with `valid` and `test`. `$SURVEY_DATA_DIR` should direct to a folder containing 18 files; the same file names as `$RESUME_DATA_DIR`, in addition to `train.ethnicity`, `train.gender`, and repeated for the `valid` and `test` splits ([refer here](https://github.com/keyonvafa/career-code/tree/main/sample-data) for a complete example). The files in `$RESUME_DATA_DIR` and `$SURVEY_DATA_DIR` should contain sequences in the same formats; for example, if resumes are encoded with [O*NET SOC 2019](https://www.onetcenter.org/taxonomy/2019/list.html), so should the survey dataset. 
+In our case, `$RESUME_DATA_DIR` should direct to a folder containing 12 files: `train.job`, `train.year`, `train.education`, `train.location`, and the same four file names but replacing `train` with `valid` and `test`. `$SURVEY_DATA_DIR` should direct to a folder containing 21 files; the same file names as `$RESUME_DATA_DIR`, in addition to `train.year_of_birth`, `train.ethnicity`, `train.gender`, and repeated for the `valid` and `test` splits ([refer here](https://github.com/keyonvafa/career-code/tree/main/sample-data) for a complete example). The files in `$RESUME_DATA_DIR` and `$SURVEY_DATA_DIR` should contain sequences in the same formats; for example, if resumes are encoded with [O*NET SOC 2019](https://www.onetcenter.org/taxonomy/2019/list.html), so should the survey dataset.
 
 You will also need to define the following variables to direct to folders where you would like CAREER to save important files:
 
@@ -113,7 +118,7 @@ The number of updates that you need to run will depend on the size of your resum
 ```{bash}
 tensorboard --logdir $LOG_DIR/resume-pretraining
 ```
-If you'd like to train without covariates, you can remove the flags `--include-year` or `--include-education` or `--include-location`. 
+If you'd like to train without covariates, you can remove the flags `--include-year` or `--include-education` or `--include-location` or `--include-year-of-birth`.
 
 ### Fine-tune CAREER on a survey dataset
 After you've pretrained CAREER on resumes, you can now fine-tune on the survey dataset by running the following command (again from the `fairseq` directory):
@@ -133,10 +138,10 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/$SURVEY_DATASET_NAME/career-transferred \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender \
-  --no-epoch-checkpoints 
+  --include-ethnicity --include-gender --include-year-of-birth \
+  --no-epoch-checkpoints
 ```
-Again, the number of steps to train for depends on the size of the dataset. Since a survey dataset is typically much smaller than a resume dataset, fine-tuning should be much faster than pretraining (fine-tuning on NLSY takes us less than 13 minutes on a single GPU). You can fine-tune even after the model begins to overfit; fairseq will always save the model with the best validation loss. Notice that here we've included covariates that weren't available for the resumes dataset (ethnicity and gender). 
+Again, the number of steps to train for depends on the size of the dataset. Since a survey dataset is typically much smaller than a resume dataset, fine-tuning should be much faster than pretraining (fine-tuning on NLSY takes us less than 13 minutes on a single GPU). You can fine-tune even after the model begins to overfit; fairseq will always save the model with the best validation loss. Notice that here we've included covariates that weren't available for the resumes dataset (ethnicity and gender).
 
 ### Evaluate CAREER
 After the model has been fine-tuned, you can evaluate the test perplexity with the following command:
@@ -168,7 +173,7 @@ fairseq-train --task occupation_modeling \
   --fp16 --two-stage \
   --no-epoch-checkpoints \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --embed-dim 1024
 ```
 To fit the regression model, run the following command (also from the `fairseq` directory):
@@ -192,7 +197,7 @@ fairseq-train --task occupation_modeling \
   --include-total-years --include-year \
   --non-consecutive-year-effect --include-education \
   --education-difference --include-ethnicity \
-  --include-gender --include-location 
+  --include-gender --include-location --include-year-of-birth
 ```
 To evaluate these models, you can run the same script as for evaluating CAREER, replacing `--model-name career` with `bag-of-jobs` or `regression`, e.g.
 ```{bash}
@@ -253,8 +258,8 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/forecast-$SURVEY_DATASET_NAME/career-transferred \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender \
-  --no-epoch-checkpoints 
+  --include-ethnicity --include-gender --include-year-of-birth \
+  --no-epoch-checkpoints
 ```
 
 ### Evaluate CAREER's forecasts
@@ -286,7 +291,7 @@ fairseq-train --task occupation_modeling \
   --fp16 --two-stage \
   --no-epoch-checkpoints \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --embed-dim 1024
 ```
 For regression:
@@ -310,7 +315,7 @@ fairseq-train --task occupation_modeling \
   --include-total-years --include-year \
   --non-consecutive-year-effect --include-education \
   --education-difference --include-ethnicity \
-  --include-gender --include-location 
+  --include-gender --include-location --include-year-of-birth
 ```
 
 ## Rationalize CAREER's predictions
@@ -331,7 +336,7 @@ fairseq-train --task occupation_modeling \
   --tensorboard-logdir $LOG_DIR/$SURVEY_DATASET_NAME/career-transferred-word-dropout \
   --fp16 --two-stage \
   --include-year --include-education --include-location \
-  --include-ethnicity --include-gender \
+  --include-ethnicity --include-gender --include-year-of-birth \
   --no-epoch-checkpoints \
   --word-dropout-mixture 0.5
 ```

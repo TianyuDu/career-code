@@ -47,7 +47,7 @@ for split in ['train', 'valid']:
     education = [line.rstrip('\n') for line in temp_file]
   print("...done")
 
-  # Resume data doesn't have race/ethnicity or gender.
+  # Resume data doesn't have race/ethnicity, gender, or year_of_birth.
   if args.dataset_name != "resumes":
     print("Loading ethnicity...")
     with open(
@@ -58,6 +58,11 @@ for split in ['train', 'valid']:
     print("Loading gender...")
     with open(os.path.join(data_dir, "{}.gender".format(split))) as temp_file:
       gender = [line.rstrip('\n') for line in temp_file]
+    print("...done")
+
+    print("Loading year_of_birth...")
+    with open(os.path.join(data_dir, "{}.year_of_birth".format(split))) as temp_file:
+      year_of_birth = [line.rstrip('\n') for line in temp_file]
     print("...done")
 
   print("Loading location...")
@@ -71,6 +76,7 @@ for split in ['train', 'valid']:
   gender_proc = []
   ethnicity_proc = []
   location_proc = []
+  year_of_birth_proc = []
 
   first_time = time.time()
 
@@ -101,8 +107,10 @@ for split in ['train', 'valid']:
     if args.dataset_name != "resumes":
       new_ethnicity = ethnicity[ind]
       new_gender = gender[ind]
+      new_year_of_birth = year_of_birth[ind]
       ethnicity_proc.append(new_ethnicity)
       gender_proc.append(new_gender)
+      year_of_birth_proc.append(new_year_of_birth)
     
     new_location = location[ind]
     
@@ -148,6 +156,13 @@ for split in ['train', 'valid']:
         f.write("%s\n" % item)
     print("...done")
     del gender_proc
+
+    print("Saving year_of_birth...")
+    with open(os.path.join(save_dir, '{}.year_of_birth'.format(split)), 'w') as f:
+      for item in year_of_birth_proc:
+        f.write("%s\n" % item)
+    print("...done")
+    del year_of_birth_proc
 
   print("Saving location...")
   with open(os.path.join(save_dir, '{}.location'.format(split)), 'w') as f:
