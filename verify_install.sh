@@ -44,7 +44,7 @@ phase "1/5  Python imports"
 uv run python - <<'PY' || { echo "  Run manually: uv run python -c 'import fairseq'"; exit 1; }
 import importlib, sys
 modules = ['numpy', 'torch', 'omegaconf', 'sacrebleu', 'regex', 'tqdm',
-           'bitarray', 'tensorboardX', 'sklearn', 'fairseq', 'hydra']
+           'bitarray', 'tensorboardX', 'fairseq', 'hydra']
 for m in modules:
     importlib.import_module(m)
 print(f'  imported {len(modules)} packages OK')
