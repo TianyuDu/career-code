@@ -21,6 +21,7 @@ dependencies = [
     "regex==2023.5.5",
     "tqdm==4.66.4",
     "bitarray==2.9.2",
+    "fairscale==0.4.13",
     "pytorch-lightning==1.9.0",
     "tensorboard==2.10.0",
     "tensorboardX==2.5",
@@ -34,6 +35,12 @@ dependencies = [
 
 [tool.uv]
 package = false
+# Force numpy 1.20.3 even though many transitive deps (pandas, etc.) declare
+# numpy>=1.22. The OAK env runs this combination successfully at runtime —
+# the version declarations are stricter than the actual API requirements.
+override-dependencies = [
+    "numpy==1.20.3",
+]
 
 [[tool.uv.index]]
 name = "pytorch-cu111"
