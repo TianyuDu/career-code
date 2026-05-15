@@ -1,3 +1,9 @@
+# DEPRECATED: this file is retained for historical reference only and does NOT
+# match the environment used to produce the LABOR-LLM published results.
+# Use `uv sync` against pyproject.toml / uv.lock instead — that is the single
+# source of truth and matches the OAK environment snapshot.
+# See README.md for the UV-based install instructions.
+
 numpy==1.22.2
 scikit-learn==1.0.2
 tensorboard==2.8.0
