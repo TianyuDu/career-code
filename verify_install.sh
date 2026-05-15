@@ -50,9 +50,11 @@ for m in modules:
 print(f'  imported {len(modules)} packages OK')
 
 import torch, numpy, fairseq
+from importlib.metadata import version as _pkg_version
 assert torch.__version__.startswith('1.8.1'), f'unexpected torch: {torch.__version__}'
 assert numpy.__version__ == '1.20.3', f'unexpected numpy: {numpy.__version__}'
-print(f'  torch={torch.__version__}  numpy={numpy.__version__}  fairseq={fairseq.__version__}')
+fairseq_version = getattr(fairseq, '__version__', None) or _pkg_version('fairseq')
+print(f'  torch={torch.__version__}  numpy={numpy.__version__}  fairseq={fairseq_version}')
 
 from fairseq.tasks.occupation_modeling import OccupationModelingTask  # noqa
 from fairseq.models.transformer import TransformerModel              # noqa
