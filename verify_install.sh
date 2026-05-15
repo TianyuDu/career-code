@@ -135,8 +135,11 @@ if [ ! -f "${SAVE}/checkpoint_last.pt" ]; then
     fail "${TRAIN_LOG} (training reported success but no checkpoint was saved)"
 fi
 
-# Pull the final loss out of the log as a sanity number.
-FINAL_LOSS=$(grep -oE '"loss": "[0-9.]+"' "${TRAIN_LOG}" | tail -1 | grep -oE '[0-9.]+' || echo "n/a")
+# Pull the final loss out of the log as a sanity number. fairseq's simple
+# log format (the default when stderr is not a TTY) emits either
+# `loss=4.123` (intermediate, comma-separated) or `loss 4.123`
+# (end-of-epoch, pipe-separated). Match both, take the last occurrence.
+FINAL_LOSS=$(grep -oE 'loss[ =][0-9.]+' "${TRAIN_LOG}" | tail -1 | grep -oE '[0-9.]+$' || echo "n/a")
 ok "trained 10 updates + validated, checkpoint at ${SAVE}/checkpoint_last.pt"
 echo "       final reported loss: ${FINAL_LOSS}"
 
