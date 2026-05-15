@@ -37,7 +37,12 @@ phase() { printf "\n=== %s ===\n" "$*"; }
 ok()    { printf "  [OK] %s\n" "$*"; }
 fail()  { printf "  [FAIL] %s\n" "$*" >&2; echo "Full log: ${1:-(see above)}" >&2; exit 1; }
 
-cd "${SCRIPT_DIR}"
+# IMPORTANT: do NOT cd into ${SCRIPT_DIR} — the repo root contains a
+# `fairseq/` directory (the fork-repo root, no __init__.py) which Python
+# would resolve as a namespace package and shadow the real editable
+# install of fairseq. cd into a subdirectory that has no fairseq/ to
+# keep sys.path[0] safe. uv walks up to find pyproject.toml from here.
+cd "${SCRIPT_DIR}/sample-data"
 
 # Phase 1: imports --------------------------------------------------------
 phase "1/5  Python imports"
