@@ -13,30 +13,33 @@ CAREER is a transformer-based model that learns a low-dimensional representation
 The instructions below will first pretrain CAREER's representations on a resume dataset and then fine-tune these representations on a small survey dataset. This code assumes that you have access to resume data and to a survey dataset such as [NLSY](https://www.bls.gov/nls/nlsy97.htm) or [PSID](https://psidonline.isr.umich.edu).
 
 ### Software requirements and installation
-Configure a virtual environment using Python 3.9+ ([instructions here](https://docs.python.org/3.6/tutorial/venv.html)).
-Inside the virtual environment, use `pip` to install the required packages:
 
-```{bash}
-pip install -r requirements.txt
-```
-This code assumes that you have access to a GPU. Running the code without a GPU may be impractically slow. We use the neural sequence library [fairseq](https://github.com/pytorch/fairseq) to model job sequences. First,
-configure fairseq to be developed locally:
-```{bash}
-cd fairseq
-pip install --editable ./
-cd ..
-```
+Dependencies are managed with [`uv`](https://docs.astral.sh/uv/) against the pinned `pyproject.toml` + `uv.lock` in this repo. This reproduces the exact environment used to produce the LABOR-LLM published results (Python 3.9.0, torch 1.8.1+cu111, numpy 1.20.3, etc.).
 
-Optionally, install NVIDIA's [apex](https://github.com/NVIDIA/apex) library to enable faster training
-```{bash}
-cd fairseq
-git clone https://github.com/NVIDIA/apex
-pip install -v --no-cache-dir \
-  --global-option="--cpp_ext" --global-option="--cuda_ext" \
-  --global-option="--deprecated_fused_adam" --global-option="--xentropy" \
-  --global-option="--fast_multihead_attn" ./
-cd ../..
-```
+1. Install `uv` (one-time): https://docs.astral.sh/uv/getting-started/installation/
+2. Bootstrap the env from the repo root:
+   ```{bash}
+   cd career-code
+   uv sync
+   ```
+   This fetches Python 3.9.0, resolves dependencies from `uv.lock`, and editable-installs the in-tree forked `fairseq/` (including building its C++/Cython extensions).
+
+   **Optional — forecasting eval:** if you plan to run `analysis/evaluate_survey_data_forecast.py` (which uses `sklearn.metrics.roc_auc_score` for AUC metrics), install with the `forecasting` extra:
+   ```{bash}
+   uv sync --extra forecasting
+   ```
+   This pulls in `scikit-learn` (and transitively `scipy`). Not needed for the main published-results pipeline (training + perplexity eval).
+3. Verify the install end-to-end (takes ~1-2 min on a GPU node, ~3-5 min on CPU):
+   ```{bash}
+   bash verify_install.sh
+   ```
+   This runs 5 phases — imports, fairseq compiled extensions, CUDA availability, sample-data binarization, and a tiny CAREER train + validation pass. Exits 0 on success; on failure, prints the failing phase and the path to the full log. If this passes, the real training/inference scripts will run.
+
+**On Sherlock:** run `uv sync` from a login node (compute nodes have no outbound network). After that, downstream scripts just `source .venv/bin/activate` — no `ml` module loads required.
+
+**Platform notes:** real training/prediction runs require a Linux x86_64 GPU host. The `torch==1.8.1+cu111` wheel is Linux-only; on macOS, `uv sync` falls back to the default PyPI `torch==1.8.1` CPU wheel (x86_64 only — Apple Silicon will need Rosetta), which is fine for code-reading and argparse-level checks but not real CAREER runs.
+
+The legacy `requirements.txt` is retained for historical reference only and does **not** match the published-results environment. Do not `pip install -r requirements.txt`.
 
 ## <a id="transfer_and_finetuning">Train CAREER on Resumes and Fine-Tune on Survey Dataset</a>
 The instructions below will first pretrain CAREER's representations on a resume dataset and then fine-tune these representations on a small survey dataset. This code assumes that you have access to resume data and to a survey dataset such as [NLSY](https://www.bls.gov/nls/nlsy97.htm) or [PSID](https://psidonline.isr.umich.edu).
